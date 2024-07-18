@@ -22,6 +22,8 @@ ${DEFAULT}
 "
 }
 
+# ///////////////////////////// input data
+
 print_sigure
 echo "please write server adress: "
 read adress
@@ -34,44 +36,22 @@ print_sigure
 echo "please write machine purpose: "
 read machine_purpose
 
-# setup issue.net and mtod
-tmp_file=tmp_text.txt
-cat << EOF > $tmp_file 
-    ░░█▒▒█▀███▌▒▒▒▒▐▒▒▒▒▒▒▒▒▒░▒░░█          Name: Sigure
-    ░▐▒▒█▌▐▌▀▀▒░▒░▒▌▌▒░▒░▒▒█▒░░░░░▌         Code: $machine_code
-    ░▐▒▒▀▒▐█░░░░░░█░▄▀░░░░▐░█▒▒▒▒▒▐         Adress : $adress
-    ░▌░░░▒░▒▌▒░▒░▐░▀▐▒▒░▒░▌░░█▒▒▌▒▐▄        Purpose: $machine_purpose
-    ░▌▒░▒░░▐▒▒▒▒▒▌░░░▌▒▐▐▐▄▀▀▀▌▒▌▒▌▌▀
-    ▐▒▒▒▒▒▒▐▒▌▒▒▐▄▀▀▐▐▒▌▒▌▒▌▒▄▒▌▌▒█▐
-    ▐▒▒▒▒▒▒▌▒▐▒▒▌▌▒█▄░▀░░░░▀▀▀▀▐▐▐░▌
-    ▌▒▒▒▒▒▐▒▒▒▀▄░▀▀░░░░░░░░░░░░▐▒▌
-    ▀▐▒▄▒▒▌▐▐▒▒▒▌▄░░░░░▀▄▀░░░▄▀▒▌▌
-    ░░▐░▀▀░▐▒▌▒▒▐▒▀▄▄▄▄▄▄▄▄▀▐▒▒▐░▐
-EOF
+# ///////////////////////////// ssh config
 
-scp $tmp_file root@$adress:/etc/issue.net 
+print_sigure
+ssh-keygen 
+ssh-copy-id root@$adress
 
-#mtod
-cat << EOF > $tmp_file
-echo "${PINK}Hello Master!!!"
-EOF
-scp $tmp_file root@$adress:/etc/mtod 
-
-rm -rf $tmp_file
-
-
-# setup ssh
-ssh-keygen
-
+print_sigure
 ssh root@$adress << EOF
 useradd anvie --create-home
 passwd anvie
-
-cat /tmp/id_rsa.pub >> ~/.ssh/authorized_keys
 EOF
 
+print_sigure
 ssh-copy-id anvie@$adress 
 
+print_sigure
 ssh root@$adress << EOF
 
 echo "
@@ -128,6 +108,41 @@ AcceptEnv LANG LC_*
 # override default of no subsystems
 Subsystem       sftp    /usr/lib/openssh/sftp-server" > /etc/ssh/sshd_config
 
-systemctl restart ssh
+
 
 EOF
+
+# ///////////////////////////// setup issue.net and mtod
+
+# issue.net
+print_sigure
+tmp_file=issue.net
+cat << EOF > $tmp_file 
+    ░░█▒▒█▀███▌▒▒▒▒▐▒▒▒▒▒▒▒▒▒░▒░░█          Name: Sigure
+    ░▐▒▒█▌▐▌▀▀▒░▒░▒▌▌▒░▒░▒▒█▒░░░░░▌         Code: $machine_code
+    ░▐▒▒▀▒▐█░░░░░░█░▄▀░░░░▐░█▒▒▒▒▒▐         Adress : $adress
+    ░▌░░░▒░▒▌▒░▒░▐░▀▐▒▒░▒░▌░░█▒▒▌▒▐▄        Purpose: $machine_purpose
+    ░▌▒░▒░░▐▒▒▒▒▒▌░░░▌▒▐▐▐▄▀▀▀▌▒▌▒▌▌▀
+    ▐▒▒▒▒▒▒▐▒▌▒▒▐▄▀▀▐▐▒▌▒▌▒▌▒▄▒▌▌▒█▐
+    ▐▒▒▒▒▒▒▌▒▐▒▒▌▌▒█▄░▀░░░░▀▀▀▀▐▐▐░▌
+    ▌▒▒▒▒▒▐▒▒▒▀▄░▀▀░░░░░░░░░░░░▐▒▌
+    ▀▐▒▄▒▒▌▐▐▒▒▒▌▄░░░░░▀▄▀░░░▄▀▒▌▌
+    ░░▐░▀▀░▐▒▌▒▒▐▒▀▄▄▄▄▄▄▄▄▀▐▒▒▐░▐
+EOF
+
+scp $tmp_file root@$adress:/etc/issue.net 
+
+#mtod
+tmp_file=motd
+cat << EOF > $tmp_file
+${PINK}Hello Master!!!${DEFAULT}
+EOF
+scp $tmp_file root@$adress:/etc/motd 
+
+rm -rf $tmp_file
+
+# ///////////////////////////// end of setup 
+ssh root@$adress "rm -rf /root/.ssh ; systemctl restart ssh"
+
+print_sigure
+echo "Server is setting up!"
